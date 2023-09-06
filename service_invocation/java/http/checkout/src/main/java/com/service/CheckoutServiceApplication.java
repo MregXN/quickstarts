@@ -1,40 +1,29 @@
 package com.service;
 
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import io.dapr.client.DaprClient;
+import io.dapr.client.DaprClientBuilder;
+import io.dapr.client.domain.HttpExtension;
 
 public class CheckoutServiceApplication {
-	private static final HttpClient httpClient = HttpClient.newBuilder()
-			.version(HttpClient.Version.HTTP_2)
-			.connectTimeout(Duration.ofSeconds(10))
-			.build();
 
-	private static final String DAPR_HTTP_PORT = System.getenv().getOrDefault("DAPR_HTTP_PORT", "3500");
+	private static final String SERVICE_APP_ID = "order-processor";
 
-	public static void main(String[] args) throws InterruptedException, IOException {
-		String dapr_url = "http://localhost:" + DAPR_HTTP_PORT + "/orders";
-		for (int i=1; i<=20; i++) {
-			int orderId = i;
-			JSONObject obj = new JSONObject();
-			obj.put("orderId", orderId);
+	public static void main(String[] args) throws Exception {
+		try (DaprClient client = (new DaprClientBuilder()).build()) {
+			for (int i = 1; i <= 20; i++) {
+				int orderId = i;
+				JSONObject obj = new JSONObject();
+				obj.put("orderId", orderId);
 
-			HttpRequest request = HttpRequest.newBuilder()
-					.POST(HttpRequest.BodyPublishers.ofString(obj.toString()))
-					.uri(URI.create(dapr_url))
-					.header("Content-Type", "application/json")
-					.header("dapr-app-id", "order-processor")
-					.build();
-
-			HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-			System.out.println("Order passed: "+ orderId);
-			TimeUnit.MILLISECONDS.sleep(1000);
+				byte[] response = client.invokeMethod(SERVICE_APP_ID, "orders", obj.toString().getBytes("UTF-8"),
+						HttpExtension.POST, null,
+						byte[].class).block();
+				System.out.println("Order passed: " + orderId);
+				TimeUnit.MILLISECONDS.sleep(1000);
+			}
 		}
 	}
 }
