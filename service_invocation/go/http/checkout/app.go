@@ -1,51 +1,32 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"os"
 	"strconv"
-	"strings"
-	"time"
+
+	dapr "github.com/dapr/go-sdk/client"
 )
 
 func main() {
-	daprHost := os.Getenv("DAPR_HOST")
-	if daprHost == "" {
-		daprHost = "http://localhost"
+	client, err := dapr.NewClient()
+	if err != nil {
+		panic(err)
 	}
-	daprHttpPort := os.Getenv("DAPR_HTTP_PORT")
-	if daprHttpPort == "" {
-		daprHttpPort = "3500"
-	}
-	client := &http.Client{
-		Timeout: 15 * time.Second,
-	}
+	defer client.Close()
+
 	for i := 1; i <= 20; i++ {
 		order := `{"orderId":` + strconv.Itoa(i) + "}"
-		req, err := http.NewRequest("POST", daprHost+":"+daprHttpPort+"/orders", strings.NewReader(order))
+		content := &dapr.DataContent{
+			ContentType: "text/plain",
+			Data:        []byte(order),
+		}
+		ctx := context.Background()
+		_, err := client.InvokeMethodWithContent(ctx, "order-processor", "orders", "post", content)
 		if err != nil {
-			log.Fatal(err.Error())
+			panic(err)
 		}
 
-		// Adding app id as part of the header
-		req.Header.Add("dapr-app-id", "order-processor")
-
-		// Invoking a service
-		response, err := client.Do(req)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		// Read the response
-		result, err := io.ReadAll(response.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		response.Body.Close()
-
-		fmt.Println("Order passed:", string(result))
+		fmt.Println("Order passed:" + strconv.Itoa(i))
 	}
 }
