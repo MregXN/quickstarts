@@ -67,8 +67,8 @@ npm install
 <!-- STEP
 name: Run checkout service
 expected_stdout_lines:
-  - '== APP == Order passed: {"orderId":1}'
-  - '== APP == Order passed: {"orderId":2}'
+  - '== APP == Order passed: 1'
+  - '== APP == Order passed: 2'
   - "Exited App successfully"
 expected_stderr_lines:
 output_match_mode: substring

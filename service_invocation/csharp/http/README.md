@@ -69,8 +69,8 @@ dotnet build
 <!-- STEP
 name: Run checkout service
 expected_stdout_lines:
-  - '== APP == Order passed: Order { OrderId = 1 }'
-  - '== APP == Order passed: Order { OrderId = 2 }'
+  - '== APP == Order passed: Order passed: 1'
+  - '== APP == Order passed: Order passed: 2'
   - "Exited App successfully"
 expected_stderr_lines:
 output_match_mode: substring
