@@ -1,7 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Dapr.Client;
+﻿using Dapr.Client;
 
 using var client = new DaprClientBuilder().Build();
 
